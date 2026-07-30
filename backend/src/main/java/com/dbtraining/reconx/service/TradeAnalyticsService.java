@@ -22,11 +22,14 @@ public class TradeAnalyticsService {
 
     /** TICKET-ADV034 — count + sum of notional per counterparty. */
     public Map<Long, NotionalSummary> notionalByCounterparty(List<? extends TradeType> trades) {
-        // TODO(TICKET-ADV034): Collectors.groupingBy(this::counterpartyIdOf,
-        //   Collectors.collectingAndThen(toList(), list -> new NotionalSummary(
-        //       list.size(),
-        //       list.stream().map(t -> t.notional().amount()).reduce(ZERO, BigDecimal::add)))).
-        throw new UnsupportedOperationException("TICKET-ADV034");
+        if (trades == null || trades.isEmpty()) return Map.of();
+        return trades.stream().collect(Collectors.groupingBy(
+                this::counterpartyIdOf,
+                Collectors.collectingAndThen(Collectors.toList(), list -> new NotionalSummary(
+                        list.size(),
+                        list.stream()
+                                .map(t -> t.notional().amount())
+                                .reduce(BigDecimal.ZERO, BigDecimal::add)))));
     }
 
     /**
@@ -34,11 +37,20 @@ public class TradeAnalyticsService {
      * EquityTrade has a meaningful price-volume pair.
      */
     public Map<String, BigDecimal> vwapByInstrument(List<EquityTrade> equityTrades) {
-        // TODO(TICKET-ADV035): group by EquityTrade::instrumentSymbol, then for
-        //   each bucket compute SUM(price * qty) / SUM(qty) using BigDecimal
-        //   with RoundingMode.HALF_UP. Return BigDecimal.ZERO when totalQty is 0
-        //   (avoid ArithmeticException on division by zero).
-        throw new UnsupportedOperationException("TICKET-ADV035");
+        if (equityTrades == null || equityTrades.isEmpty()) return Map.of();
+        return equityTrades.stream().collect(Collectors.groupingBy(
+                EquityTrade::instrumentSymbol,
+                Collectors.collectingAndThen(Collectors.toList(), bucket -> {
+                    BigDecimal totalPxQty = BigDecimal.ZERO;
+                    BigDecimal totalQty   = BigDecimal.ZERO;
+                    for (EquityTrade t : bucket) {
+                        totalPxQty = totalPxQty.add(t.price().multiply(t.quantity()));
+                        totalQty   = totalQty.add(t.quantity());
+                    }
+                    return totalQty.signum() == 0
+                            ? BigDecimal.ZERO
+                            : totalPxQty.divide(totalQty, 6, RoundingMode.HALF_UP);
+                })));
     }
 
     /** TICKET-ADV036 — P&L per instrument symbol (sign by Side). */
