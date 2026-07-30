@@ -57,8 +57,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
             throws ServletException, IOException {
-        // TODO(TICKET-ADV073): parse the Authorization header, populate the
-        //                     SecurityContext, then call chain.doFilter.
+        String header = req.getHeader("Authorization");
+        if (header != null && header.startsWith("Bearer ")) {
+            String token = header.substring(7);
+            try {
+                Claims claims = provider.parse(token);
+                String email = claims.getSubject();
+                String role  = (String) claims.get("role");
+                var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
+                var auth = new UsernamePasswordAuthenticationToken(email, null, authorities);
+                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(req));
+                SecurityContextHolder.getContext().setAuthentication(auth);
+            } catch (JwtException ex) {
+                SecurityContextHolder.clearContext();
+            }
+        }
         chain.doFilter(req, res);
     }
 }
