@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
  * Verifies BCrypt password, returns a JWT carrying the user's role.
  */
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/v1/auth")
 @Tag(name = "auth")
 public class AuthController {
 

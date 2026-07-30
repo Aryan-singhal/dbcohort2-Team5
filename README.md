@@ -144,7 +144,13 @@ npm run dev
 # - Kafdrop:         http://localhost:9000
 # - Actuator health: http://localhost:8080/actuator/health
 ```
+## API Versioning
 
+All REST APIs are exposed under `/api/v1/`.
+
+Breaking API changes are introduced under a new version segment
+(e.g. `/api/v2/`). Existing API versions remain available until
+their published Sunset date before being removed.
 ### Default credentials (dev profile only, after you implement Day 5)
 
 | Role          | Username        | Password     |
@@ -154,7 +160,7 @@ npm run dev
 | VIEWER        | `viewer@db.com` | `viewer123`  |
 | RECON_ANALYST | `recon@db.com`  | `recon123`   |
 
-JWT issued from `POST /api/auth/login` is valid for 60 minutes. Refresh tokens
+JWT issued from `POST /api/v1/auth/login` is valid for 60 minutes. Refresh tokens
 live in HttpOnly cookies for 7 days.
 
 ---

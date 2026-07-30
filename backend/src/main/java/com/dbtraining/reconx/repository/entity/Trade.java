@@ -5,7 +5,7 @@ import org.hibernate.annotations.SQLRestriction;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
+import org.hibernate.envers.Audited; 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -31,8 +31,8 @@ import java.time.LocalDate;
  */
 @Entity
 @Table(name = "trades")
-@EntityListeners(AuditingEntityListener.class)
-// @org.hibernate.envers.Audited                  // re-enable when envers tables are migrated
+@EntityListeners(AuditingEntityListener.class)  
+@Audited       
 @SQLRestriction("deleted_at IS NULL")
 public class Trade {
 
