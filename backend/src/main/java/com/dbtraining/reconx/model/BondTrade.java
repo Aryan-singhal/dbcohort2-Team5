@@ -7,118 +7,101 @@ import java.util.Objects;
 
 /**
  * ============================================================================
- * TICKET-ADV019 — EquityTrade with Builder pattern
+ * TICKET-ADV021 — BondTrade with Builder pattern
  *
- * WHAT:    Concrete TradeType for equity (cash share) trades.
- * HOW:     Final class, all fields final, no setters. Construction is via the
- *          nested {@link Builder} which validates in {@link Builder#build()}.
- * WHY:     Eight required fields on a single constructor is unreadable at
- *          the call site. Builder gives named arguments, makes the validity
- *          check a single chokepoint, and the object stays immutable.
- * OBSERVE: Calling build() with a missing required field throws
- *          IllegalStateException — verified by EquityTradeTest.
- * HINT:    Same shape applied to FXTrade/BondTrade/DerivativeTrade.
+ * WHAT:    Fixed-income trade — couponRate, maturityDate, faceValue, isin.
+ * HOW:     Same builder pattern. notional() = faceValue (in the bond's ccy).
+ * WHY:     Bonds need couponRate/maturity for downstream cashflow modelling.
+ *          Modelling them on the trade is the simplest path for the demo.
  * ============================================================================
- *
- * TICKET-ADV028 — equals/hashCode from tradeRef (Object methods on a regular class)
- * TICKET-ADV030 — toString() omits PII, prints reference/symbol/qty/price/side
  */
-public final class EquityTrade implements TradeType {
+public final class BondTrade implements TradeType {
 
     private final TradeRef tradeRef;
-    private final String instrumentSymbol;
-    private final BigDecimal quantity;
-    private final BigDecimal price;
+    private final String isin;
+    private final BigDecimal faceValue;
+    private final BigDecimal couponRate;
+    private final LocalDate maturityDate;
     private final Currency currency;
     private final Side side;
     private final LocalDate tradeDate;
     private final long counterpartyId;
 
-    private EquityTrade(Builder b) {
-        this.tradeRef         = b.tradeRef;
-        this.instrumentSymbol = b.instrumentSymbol;
-        this.quantity         = b.quantity;
-        this.price            = b.price;
-        this.currency         = b.currency;
-        this.side             = b.side;
-        this.tradeDate        = b.tradeDate;
-        this.counterpartyId   = b.counterpartyId;
+    private BondTrade(Builder b) {
+        this.tradeRef       = b.tradeRef;
+        this.isin           = b.isin;
+        this.faceValue      = b.faceValue;
+        this.couponRate     = b.couponRate;
+        this.maturityDate   = b.maturityDate;
+        this.currency       = b.currency;
+        this.side           = b.side;
+        this.tradeDate      = b.tradeDate;
+        this.counterpartyId = b.counterpartyId;
     }
 
     public static Builder builder() { return new Builder(); }
 
-    @Override public TradeRef tradeRef()    { return tradeRef; }
-    @Override public LocalDate tradeDate()  { return tradeDate; }
-    @Override public AssetClass assetClass(){ return AssetClass.EQUITY; }
+    @Override public TradeRef tradeRef()     { return tradeRef; }
+    @Override public LocalDate tradeDate()   { return tradeDate; }
+    @Override public AssetClass assetClass() { return AssetClass.BOND; }
 
-    /** Notional = quantity * price in the trade currency. */
+    /** Notional = faceValue in the bond's currency. */
     @Override public Money notional() {
-        // TODO(TICKET-ADV019): return new Money(quantity * price, currency).
-        throw new UnsupportedOperationException("TICKET-ADV019");
+        return new Money(faceValue, currency);
     }
 
-    public String instrumentSymbol() { return instrumentSymbol; }
-    public BigDecimal quantity()     { return quantity; }
-    public BigDecimal price()        { return price; }
-    public Currency currency()       { return currency; }
-    public Side side()               { return side; }
-    public long counterpartyId()     { return counterpartyId; }
+    public String isin()              { return isin; }
+    public BigDecimal faceValue()     { return faceValue; }
+    public BigDecimal couponRate()    { return couponRate; }
+    public LocalDate maturityDate()   { return maturityDate; }
+    public Currency currency()        { return currency; }
+    public Side side()                { return side; }
+    public long counterpartyId()      { return counterpartyId; }
 
-    /** equals: two EquityTrades are equal iff their tradeRef is equal. */
-    @Override
-    public boolean equals(Object o) {
-        // TODO(TICKET-ADV028): pattern-match on EquityTrade and compare tradeRef.
-        throw new UnsupportedOperationException("TICKET-ADV028");
+    @Override public boolean equals(Object o) {
+        return (o instanceof BondTrade other) && tradeRef.equals(other.tradeRef);
     }
-
     @Override public int hashCode() {
-        // TODO(TICKET-ADV028): hash from tradeRef so it pairs with equals().
-        throw new UnsupportedOperationException("TICKET-ADV028");
+        return tradeRef.hashCode();
     }
 
-   @Override
-public String toString() {
-    // NOTE: Deliberately excludes counterpartyId, settlement details and any
-    // LEI-like identifiers to avoid leaking PII into application logs.
-    return "EquityTrade[ref=%s, symbol=%s, qty=%s, price=%s %s, side=%s]"
-            .formatted(
-                    tradeRef,
-                    instrumentSymbol,
-                    quantity.toPlainString(),
-                    price.toPlainString(),
-                    currency.getCurrencyCode(),
-                    side
-            );
-}
+    @Override public String toString() {
+        return "BondTrade[ref=%s, isin=%s, face=%s %s, coupon=%s, maturity=%s, side=%s]"
+                .formatted(tradeRef, isin, faceValue, currency.getCurrencyCode(),
+                        couponRate, maturityDate, side);
+    }
 
-    /** Fluent builder. Required fields validated in {@link #build()}. */
     public static final class Builder {
         private TradeRef tradeRef;
-        private String instrumentSymbol;
-        private BigDecimal quantity;
-        private BigDecimal price;
+        private String isin;
+        private BigDecimal faceValue, couponRate;
+        private LocalDate maturityDate, tradeDate;
         private Currency currency;
         private Side side;
-        private LocalDate tradeDate;
         private long counterpartyId;
 
-        public Builder tradeRef(TradeRef v)           { this.tradeRef = v;        return this; }
-        public Builder instrumentSymbol(String v)     { this.instrumentSymbol = v; return this; }
-        public Builder quantity(BigDecimal v)         { this.quantity = v;        return this; }
-        public Builder price(BigDecimal v)            { this.price = v;           return this; }
-        public Builder currency(Currency v)           { this.currency = v;        return this; }
-        public Builder currency(String code)          { return currency(Currency.getInstance(code)); }
-        public Builder side(Side v)                   { this.side = v;            return this; }
-        public Builder tradeDate(LocalDate v)         { this.tradeDate = v;       return this; }
-        public Builder counterpartyId(long v)         { this.counterpartyId = v;  return this; }
+        public Builder tradeRef(TradeRef v)        { this.tradeRef = v; return this; }
+        public Builder isin(String v)              { this.isin = v; return this; }
+        public Builder faceValue(BigDecimal v)     { this.faceValue = v; return this; }
+        public Builder couponRate(BigDecimal v)    { this.couponRate = v; return this; }
+        public Builder maturityDate(LocalDate v)   { this.maturityDate = v; return this; }
+        public Builder currency(String code)       { this.currency = Currency.getInstance(code); return this; }
+        public Builder side(Side v)                { this.side = v; return this; }
+        public Builder tradeDate(LocalDate v)      { this.tradeDate = v; return this; }
+        public Builder counterpartyId(long v)      { this.counterpartyId = v; return this; }
 
-        public EquityTrade build() {
-            // TODO(TICKET-ADV019):
-            //   - Objects.requireNonNull each required field (tradeRef, instrumentSymbol,
-            //     quantity, price, currency, side, tradeDate).
-            //   - quantity and price must be > 0 (IllegalStateException otherwise).
-            //   - return new EquityTrade(this).
-            throw new UnsupportedOperationException("TICKET-ADV019");
+        public BondTrade build() {
+            Objects.requireNonNull(tradeRef,     "tradeRef");
+            Objects.requireNonNull(isin,         "isin");
+            Objects.requireNonNull(faceValue,    "faceValue");
+            Objects.requireNonNull(couponRate,   "couponRate");
+            Objects.requireNonNull(maturityDate, "maturityDate");
+            Objects.requireNonNull(currency,     "currency");
+            Objects.requireNonNull(side,         "side");
+            Objects.requireNonNull(tradeDate,    "tradeDate");
+            if (maturityDate.isBefore(tradeDate))
+                throw new IllegalStateException("maturityDate cannot be before tradeDate");
+            return new BondTrade(this);
         }
     }
 }
