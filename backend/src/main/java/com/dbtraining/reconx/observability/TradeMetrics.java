@@ -13,26 +13,26 @@ import org.springframework.stereotype.Component;
  * TICKET-ADV085 — recon_break_count Gauge (polled — wraps repo.countByStatus)
  * TICKET-ADV086 — trade_value_total DistributionSummary
  *
- * WHAT:    Holds Micrometer instruments published to /actuator/prometheus.
- * HOW:     Counters / Distribution Summaries are constructed once in the
- *          constructor and stored as final fields. Gauges are "polled" —
- *          Micrometer holds a weak reference and calls the lambda on scrape.
- * WHY:     Three different metric shapes matter:
- *            - Counter: monotonic count of events (created trades)
- *            - DistributionSummary: histogram of magnitudes (trade values)
- *            - Gauge: instantaneous value (open recon breaks)
+ * WHAT: Holds Micrometer instruments published to /actuator/prometheus.
+ * HOW: Counters / Distribution Summaries are constructed once in the
+ * constructor and stored as final fields. Gauges are "polled" —
+ * Micrometer holds a weak reference and calls the lambda on scrape.
+ * WHY: Three different metric shapes matter:
+ * - Counter: monotonic count of events (created trades)
+ * - DistributionSummary: histogram of magnitudes (trade values)
+ * - Gauge: instantaneous value (open recon breaks)
  *
  * The TIMER for reconciliation duration lives as @Timed on
  * ReconciliationEngine.reconcile() (TICKET-ADV084) — not in this class.
  * ============================================================================
  *
- *  TODO(TICKET-ADV083 + ADV086):
- *    public void incrementTradeCreated() { tradeCreated.increment(); }
- *    public void recordTradeValue(double value) { tradeValue.record(value); }
+ * TODO(TICKET-ADV083 + ADV086):
+ * public void incrementTradeCreated() { tradeCreated.increment(); }
+ * public void recordTradeValue(double value) { tradeValue.record(value); }
  *
- *  HINT: A polled Gauge MUST hold a strong reference to its source object,
- *        otherwise it disappears on GC. Here breakRepo is captured by the
- *        Gauge.builder so the lifetime is tied to the registry.
+ * HINT: A polled Gauge MUST hold a strong reference to its source object,
+ * otherwise it disappears on GC. Here breakRepo is captured by the
+ * Gauge.builder so the lifetime is tied to the registry.
  * ============================================================================
  */
 @Component
@@ -60,6 +60,7 @@ public class TradeMetrics {
 
     public void incrementTradeCreated() {
         // TODO(TICKET-ADV083): increment the tradeCreated counter.
+        tradeCreated.increment();
     }
 
     public void recordTradeValue(double value) {
