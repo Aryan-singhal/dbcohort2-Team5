@@ -112,3 +112,6 @@ springdoc:
     operationsSorter: alpha
   api-docs:
     path: /v3/api-docs
+
+jmx:
+  enabled: true
