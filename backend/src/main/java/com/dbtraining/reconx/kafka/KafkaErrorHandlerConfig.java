@@ -23,11 +23,11 @@ public class KafkaErrorHandlerConfig {
                                 new TopicPartition(rec.topic() + "-dlq", rec.partition())
                 );
 
-        ExponentialBackOff backoff = new ExponentialBackOff(1000L, 2.0);
-        backoff.setMaxAttempts(3);
-
-        DefaultErrorHandler handler =
-                new DefaultErrorHandler(recoverer, backoff);
+        ExponentialBackOff backOff = new ExponentialBackOff(1000L, 2.0);
+        backOff.setMaxAttempts(3);
+        
+        DefaultErrorHandler errorHandler =
+                new DefaultErrorHandler(recoverer, backOff);
 
         handler.addNotRetryableExceptions(
                 DeserializationException.class,
