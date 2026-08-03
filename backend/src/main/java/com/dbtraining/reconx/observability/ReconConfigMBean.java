@@ -1,8 +1,5 @@
 package com.dbtraining.reconx.observability;
 
-public
-package com.dbtraining.reconx.observability;
-
 import org.springframework.cache.CacheManager;
 import org.springframework.jmx.export.annotation.ManagedAttribute;
 import org.springframework.jmx.export.annotation.ManagedOperation;
@@ -10,10 +7,7 @@ import org.springframework.jmx.export.annotation.ManagedResource;
 import org.springframework.stereotype.Component;
 
 @Component
-@ManagedResource(
-    objectName = "reconx:type=ReconConfig",
-    description = "Runtime tuning for the reconciliation engine"
-)
+@ManagedResource(objectName = "reconx:type=ReconConfig", description = "Runtime tuning for the reconciliation engine")
 public class ReconConfigMBean {
 
     private volatile double priceTolerance = 0.01;
@@ -31,20 +25,23 @@ public class ReconConfigMBean {
 
     @ManagedAttribute
     public void setPriceTolerance(double v) {
-        if (v < 0 || v > 1) throw new IllegalArgumentException("tolerance must be 0..1");
+        if (v < 0 || v > 1)
+            throw new IllegalArgumentException("tolerance must be 0..1");
         this.priceTolerance = v;
     }
 
     @ManagedAttribute
-    public boolean isCachingEnabled() { return cachingEnabled; }
+    public boolean isCachingEnabled() {
+        return cachingEnabled;
+    }
 
     @ManagedAttribute
-    public void setCachingEnabled(boolean enabled) { this.cachingEnabled = enabled; }
+    public void setCachingEnabled(boolean enabled) {
+        this.cachingEnabled = enabled;
+    }
 
     @ManagedOperation(description = "Evict all entries from the instruments cache")
     public void clearCache() {
         cacheManager.getCacheNames().forEach(n -> cacheManager.getCache(n).clear());
     }
-}{
-
 }

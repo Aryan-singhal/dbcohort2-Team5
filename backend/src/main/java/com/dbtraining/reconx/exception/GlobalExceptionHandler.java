@@ -38,7 +38,7 @@ public class GlobalExceptionHandler {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
         pd.setType(URI.create("https://reconx.dbtraining.com/errors/recon-failure"));
         pd.setTitle("Reconciliation failure");
-        pd.setProperty("reconBreakId", ex.getReconBreakId());
+        pd.setProperty("reconBreakId", ex.getMessage());
         return pd;
     }
 

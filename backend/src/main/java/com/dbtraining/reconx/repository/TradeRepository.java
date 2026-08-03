@@ -1,7 +1,7 @@
 package com.dbtraining.reconx.repository;
 
-import com.dbtraining.reconx.domain.Trade;
-import com.dbtraining.reconx.domain.TradeStatus;
+import com.dbtraining.reconx.repository.entity.Trade;
+import com.dbtraining.reconx.repository.entity.TradeStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -23,6 +23,8 @@ public interface TradeRepository
         extends JpaRepository<Trade, Long>, JpaSpecificationExecutor<Trade> {
 
     Optional<Trade> findByTradeRef(String tradeRef);
+
+    java.util.Optional<Trade> findByRef(String ref);
 
     @Query("""
         SELECT t FROM Trade t

@@ -11,8 +11,8 @@ import org.springframework.stereotype.Component;
 
 @Generated(
     value = "org.mapstruct.ap.MappingProcessor",
-    date = "2026-07-30T13:11:30+0530",
-    comments = "version: 1.6.2, compiler: javac, environment: Java 25.0.4 (Homebrew)"
+    date = "2026-08-03T17:34:55+0530",
+    comments = "version: 1.6.2, compiler: javac, environment: Java 25.0.3 (Microsoft)"
 )
 @Component
 public class TradeMapperImpl implements TradeMapper {
@@ -29,8 +29,6 @@ public class TradeMapperImpl implements TradeMapper {
         String counterpartyName = null;
         Long id = null;
         String tradeRef = null;
-        String assetClass = null;
-        String side = null;
         BigDecimal quantity = null;
         BigDecimal price = null;
         LocalDate tradeDate = null;
@@ -44,8 +42,6 @@ public class TradeMapperImpl implements TradeMapper {
         counterpartyName = tradeCounterpartyName( trade );
         id = trade.getId();
         tradeRef = trade.getTradeRef();
-        assetClass = trade.getAssetClass();
-        side = trade.getSide();
         quantity = trade.getQuantity();
         price = trade.getPrice();
         tradeDate = trade.getTradeDate();
@@ -53,9 +49,27 @@ public class TradeMapperImpl implements TradeMapper {
         createdAt = trade.getCreatedAt();
         modifiedAt = trade.getModifiedAt();
 
-        TradeResponse tradeResponse = new TradeResponse( id, tradeRef, instrumentId, instrumentSymbol, counterpartyId, counterpartyName, assetClass, side, quantity, price, tradeDate, status, createdAt, modifiedAt );
+        TradeResponse tradeResponse = new TradeResponse( id, tradeRef, counterpartyId, counterpartyName, instrumentId, instrumentSymbol, quantity, price, tradeDate, status, createdAt, modifiedAt );
 
         return tradeResponse;
+    }
+
+    @Override
+    public Trade toEntity(TradeRequest req) {
+        if ( req == null ) {
+            return null;
+        }
+
+        Trade trade = new Trade();
+
+        trade.setTradeRef( req.tradeRef() );
+        trade.setAssetClass( req.assetClass() );
+        trade.setSide( req.side() );
+        trade.setQuantity( req.quantity() );
+        trade.setPrice( req.price() );
+        trade.setTradeDate( req.tradeDate() );
+
+        return trade;
     }
 
     private Long tradeInstrumentId(Trade trade) {

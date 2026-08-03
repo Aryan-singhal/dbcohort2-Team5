@@ -2,44 +2,17 @@ package com.dbtraining.reconx.service;
 
 import com.dbtraining.reconx.dto.ReconResult;
 import com.dbtraining.reconx.model.*;
-import org.junit.jupiter.api.Test;
+import io.micrometer.core.annotation.Timed;
+
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
-import static org.assertj.core.api.Assertions.assertThat;
+public class ReconciliationEngine {
 
-/**
- * TICKET-ADV040 / TICKET-ADV041 / TICKET-ADV042 — TDD: write the test FIRST,
- * then the impl.
- */
-class ReconciliationEngineTest {
-
-    private final ReconciliationEngine engine = new ReconciliationEngine();
-
-    @Test
-    void testReconcile_exactMatch_returnsMatched() {
-        EquityTrade internal = equity("EQU-20260603-0001", "100.00", "1000");
-        EquityTrade external = equity("EQU-20260603-0001", "100.00", "1000");
-
-        List<ReconResult> out = engine.reconcile(List.of(internal), List.of(external), ReconciliationRule.EXACT);
-
-        assertThat(out).hasSize(1);
-        assertThat(out.get(0).status()).isEqualTo(ReconResult.Status.MATCHED);
-    }
-
-    private EquityTrade equity(String ref, String price, String qty) {
-        return EquityTrade.builder()
-                .tradeRef(TradeRef.of(ref))
-                .instrumentSymbol("SAP.DE")
-                .price(new BigDecimal(price))
-                .quantity(new BigDecimal(qty))
-                .currency("EUR").side(Side.BUY)
-                .tradeDate(LocalDate.of(2026, 6, 3))
-                .counterpartyId(1L)
-                .build();
-    }
-}
     @Timed(value = "reconciliation.duration", description = "Wall time of reconcile()",
            percentiles = {0.5, 0.95, 0.99}, histogram = true)
     public List<ReconResult> reconcile(List<TradeType> internal,
@@ -57,7 +30,6 @@ class ReconciliationEngineTest {
                 .toList();
     }
 
-
     /**
      * TICKET-ADV037 — split by counterparty, reconcile each batch concurrently,
      * combine into a single result list. Caller passes one external feed per
@@ -68,27 +40,27 @@ class ReconciliationEngineTest {
         Map<Long, List<TradeType>> externalByCp,
         ReconciliationRule rule) {
 
-    List<CompletableFuture<List<ReconResult>>> futures = internalByCp.entrySet()
-            .stream()
-            .map(entry ->
-                    CompletableFuture.supplyAsync(() ->
-                            reconcile(
-                                    entry.getValue(),
-                                    externalByCp.getOrDefault(entry.getKey(), List.of()),
-                                    rule
-                            )
-                    )
-            )
-            .toList();
+        List<CompletableFuture<List<ReconResult>>> futures = internalByCp.entrySet()
+                .stream()
+                .map(entry ->
+                        CompletableFuture.supplyAsync(() ->
+                                reconcile(
+                                        entry.getValue(),
+                                        externalByCp.getOrDefault(entry.getKey(), List.of()),
+                                        rule
+                                )
+                        )
+                )
+                .toList();
 
-    return CompletableFuture
-            .allOf(futures.toArray(new CompletableFuture[0]))
-            .thenApply(v ->
-                    futures.stream()
-                            .flatMap(future -> future.join().stream())
-                            .toList()
-            );
-}
+        return CompletableFuture
+                .allOf(futures.toArray(new CompletableFuture[0]))
+                .thenApply(v ->
+                        futures.stream()
+                                .flatMap(future -> future.join().stream())
+                                .toList()
+                );
+    }
 
     private ReconResult matchOne(TradeType internal, TradeType external, ReconciliationRule rule) {
         String ref = internal.tradeRef().value();

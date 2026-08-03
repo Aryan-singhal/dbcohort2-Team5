@@ -1,7 +1,7 @@
 package com.dbtraining.reconx.service;
 
 import com.dbtraining.reconx.dto.ReconResult;
-
+import com.dbtraining.reconx.dto.ReconSummary;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.function.BiConsumer;

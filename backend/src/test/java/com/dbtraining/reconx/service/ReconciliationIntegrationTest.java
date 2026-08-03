@@ -1,6 +1,9 @@
 package com.dbtraining.reconx.service;
 
 import org.junit.jupiter.api.Test;
+import com.dbtraining.reconx.repository.InternalTradeRepository;
+import com.dbtraining.reconx.repository.ExternalTradeRepository;
+import com.dbtraining.reconx.repository.ReconResultRepository;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;

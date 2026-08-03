@@ -63,7 +63,8 @@ public class TradeService {
         // save, then:
         // - metrics.incrementTradeCreated() + metrics.recordTradeValue(qty*price) —
         // TICKET-ADV083
-        Trade saved = tradeRepo.save(t);
+        Trade t = new Trade();
+Trade saved = tradeRepo.save(t);
         metrics.incrementTradeCreated();
         metrics.recordTradeValue(saved.getQuantity().multiply(saved.getPrice()).doubleValue());
         // - events.publish(new TradeEvent(... TRADE_CREATED ... actor ...)) —

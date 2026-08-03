@@ -1,6 +1,7 @@
 package com.dbtraining.reconx.service;
 
 import com.dbtraining.reconx.dto.ReconResult;
+import com.dbtraining.reconx.dto.ReconSummary;
 import com.dbtraining.reconx.model.*;
 import org.junit.jupiter.api.Test;
 
@@ -16,7 +17,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class ReconciliationEngineTest {
 
-    private final ReconciliationEngineTest engine = new ReconciliationEngineTest();
+    // FIX: Instantiate the actual service, not the test class
+    private final ReconciliationEngine engine = new ReconciliationEngine();
 
     @Test
     void testReconcile_exactMatch_returnsMatched() {
@@ -38,19 +40,19 @@ class ReconciliationEngineTest {
                 ReconciliationRule.PRICE_TOLERANCE_1PCT);
 
         assertThat(out.get(0).status()).isEqualTo(ReconResult.Status.MATCHED);
+    } // FIX: Added missing closing brace here
+
     @Test
     void testReconcile_missingCounterpartyTrade_returnsBreak() {
-       // given
-    EquityTrade internal = equity("EQU-20260603-0003", "100.00", "1000");
+        // given
+        EquityTrade internal = equity("EQU-20260603-0003", "100.00", "1000");
 
-    // when
-    List<ReconResult> out =
-            engine.reconcile(List.of(internal), List.of(), ReconciliationRule.EXACT);
+        // when
+        List<ReconResult> out = engine.reconcile(List.of(internal), List.of(), ReconciliationRule.EXACT);
 
-    // then
-    assertThat(out.get(0).status()).isEqualTo(ReconResult.Status.BREAK);
-    assertThat(out.get(0).discrepancyType()).isEqualTo("MISSING_EXTERNAL");
-     
+        // then
+        assertThat(out.get(0).status()).isEqualTo(ReconResult.Status.BREAK);
+        assertThat(out.get(0).discrepancyType()).isEqualTo("MISSING_EXTERNAL");
     }
 
     @Test
@@ -58,7 +60,8 @@ class ReconciliationEngineTest {
         assertThat(engine.reconcile(List.of(), List.of(), ReconciliationRule.EXACT)).isEmpty();
     }
 
-    // single internal trade with no external feed -> one BREAK with MISSING_EXTERNAL
+    // single internal trade with no external feed -> one BREAK with
+    // MISSING_EXTERNAL
     @Test
     void testReconcile_singleInternalNoExternal_returnsBreak() {
         EquityTrade internal = equity("EQU-20260603-EDGE-1", "100.00", "1000");
