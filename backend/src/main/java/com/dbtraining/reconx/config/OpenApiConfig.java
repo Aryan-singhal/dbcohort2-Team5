@@ -2,6 +2,8 @@ package com.dbtraining.reconx.config;
 
 import org.springframework.context.annotation.Configuration;
 
+
+
 /**
  * ============================================================================
  * OpenApiConfig — TICKET-ADV058
