@@ -29,11 +29,11 @@ public class KafkaErrorHandlerConfig {
         DefaultErrorHandler errorHandler =
                 new DefaultErrorHandler(recoverer, backOff);
 
-        handler.addNotRetryableExceptions(
+        errorHandler.addNotRetryableExceptions(
                 DeserializationException.class,
                 IllegalArgumentException.class
         );
 
-        return handler;
+        return errorHandler;
     }
 }
