@@ -15,38 +15,44 @@
 SELECT
     t.trade_ref,
     t.trade_date,
-    t.instrument_id,
+    i.symbol,
     t.quantity,
     t.price,
     t.quantity * t.price AS notional,
-    SUM(t.price * t.quanity)
-    OVER(PARTITION BY t.instrument_id, t.trade_date)/
-    NULLIF( SUM(t.quantity)
-    OVER(PARTITION BY t.instrument_id, t.trade_date),
-    0 )
-    AS vwap FROM trades t
-    WHERE t.deleted_at IS NULL
+    SUM(t.price * t.quantity)
+        OVER (PARTITION BY t.instrument_id, t.trade_date)
+    /
+    NULLIF(
+        SUM(t.quantity)
+            OVER (PARTITION BY t.instrument_id, t.trade_date),
+        0
+    ) AS vwap
+FROM trades t
+JOIN instruments i
+    ON i.id = t.instrument_id
+WHERE t.deleted_at IS NULL
+  AND t.asset_class = 'EQUITY'
+ORDER BY t.trade_date DESC, t.instrument_id;
     
 
 -- ============================================================================
--- TICKET-ADV011 — Recursive CTE: trade lifecycle (execution -> settlement
---                -> recon_break -> resolution)
+-- TICKET-ADV011 — Recursive CTE: trade lifecycle
 -- ============================================================================
 WITH RECURSIVE trade_lifecycle AS (
-    -- anchor: every trade in its execution state
+    -- Base case: every trade starts in EXECUTED state
     SELECT
-        t.id           AS trade_id,
+        t.id AS trade_id,
         t.trade_ref,
-        1              AS step,
-        'EXECUTED'     AS state,
-        t.created_at   AS at_ts,
-        NULL::text     AS detail
+        1 AS step,
+        'EXECUTED' AS state,
+        t.created_at AS at_ts,
+        NULL::text AS detail
     FROM trades t
     WHERE t.deleted_at IS NULL
 
     UNION ALL
 
-    -- recursive: each subsequent state derived from the previous step
+    -- Recursive step: advance the trade lifecycle
     SELECT
         tl.trade_id,
         tl.trade_ref,
@@ -55,14 +61,17 @@ WITH RECURSIVE trade_lifecycle AS (
             WHEN 1 THEN 'CONFIRMED'
             WHEN 2 THEN 'SETTLED'
             WHEN 3 THEN 'RECONCILED'
-        END                                          AS state,
-        s.settlement_date::timestamp                  AS at_ts,
-        s.status                                      AS detail
+        END AS state,
+        s.settlement_date::timestamp AS at_ts,
+        s.status AS detail
     FROM trade_lifecycle tl
-    JOIN settlements s ON s.trade_id = tl.trade_id
+    JOIN settlements s
+        ON s.trade_id = tl.trade_id
     WHERE tl.step < 4
 )
-SELECT * FROM trade_lifecycle
+
+SELECT *
+FROM trade_lifecycle
 ORDER BY trade_id, step;
 
 

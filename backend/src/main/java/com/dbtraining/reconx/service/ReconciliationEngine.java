@@ -64,15 +64,31 @@ class ReconciliationEngineTest {
      * counterparty (typical real-world shape).
      */
     public CompletableFuture<List<ReconResult>> reconcileByCounterparty(
-            Map<Long, List<TradeType>> internalByCp,
-            Map<Long, List<TradeType>> externalByCp,
-            ReconciliationRule rule) {
-        // TODO(TICKET-ADV037): for each counterparty key in internalByCp launch a
-        //   CompletableFuture.supplyAsync(() -> reconcile(...)). Combine via
-        //   CompletableFuture.allOf(...).thenApply(v -> futures.stream()
-        //       .flatMap(f -> f.join().stream()).toList()).
-        throw new UnsupportedOperationException("TICKET-ADV037");
-    }
+        Map<Long, List<TradeType>> internalByCp,
+        Map<Long, List<TradeType>> externalByCp,
+        ReconciliationRule rule) {
+
+    List<CompletableFuture<List<ReconResult>>> futures = internalByCp.entrySet()
+            .stream()
+            .map(entry ->
+                    CompletableFuture.supplyAsync(() ->
+                            reconcile(
+                                    entry.getValue(),
+                                    externalByCp.getOrDefault(entry.getKey(), List.of()),
+                                    rule
+                            )
+                    )
+            )
+            .toList();
+
+    return CompletableFuture
+            .allOf(futures.toArray(new CompletableFuture[0]))
+            .thenApply(v ->
+                    futures.stream()
+                            .flatMap(future -> future.join().stream())
+                            .toList()
+            );
+}
 
     private ReconResult matchOne(TradeType internal, TradeType external, ReconciliationRule rule) {
         String ref = internal.tradeRef().value();
