@@ -32,6 +32,7 @@ public class Instrument {
     private String currency;
 
     @Type(JsonBinaryType.class)
+    @Transient
     @Column(columnDefinition = "jsonb")
     private Map<String, Object> metadata = new HashMap<>();
 

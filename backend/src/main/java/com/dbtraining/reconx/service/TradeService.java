@@ -44,10 +44,10 @@ public class TradeService {
     private final TradeMetrics metrics;
 
     public TradeService(TradeRepository tradeRepo,
-                        CounterpartyRepository cpRepo,
-                        InstrumentRepository instRepo,
-                        TradeEventProducer events,
-                        TradeMetrics metrics) {
+            CounterpartyRepository cpRepo,
+            InstrumentRepository instRepo,
+            TradeEventProducer events,
+            TradeMetrics metrics) {
         this.tradeRepo = tradeRepo;
         this.cpRepo = cpRepo;
         this.instRepo = instRepo;
@@ -56,18 +56,25 @@ public class TradeService {
     }
 
     public Trade create(TradeRequest req, String actor) {
-        // TODO(TICKET-ADV064): reject duplicate tradeRef via DuplicateTradeRefException,
-        //   build a new Trade with instrument + counterparty looked up from
-        //   their repos (throw TradeNotFoundException on miss), status = "PENDING",
-        //   save, then:
-        //     - metrics.incrementTradeCreated() + metrics.recordTradeValue(qty*price) — TICKET-ADV083
-        //     - events.publish(new TradeEvent(... TRADE_CREATED ... actor ...)) — TICKET-ADV129
+        // TODO(TICKET-ADV064): reject duplicate tradeRef via
+        // DuplicateTradeRefException,
+        // build a new Trade with instrument + counterparty looked up from
+        // their repos (throw TradeNotFoundException on miss), status = "PENDING",
+        // save, then:
+        // - metrics.incrementTradeCreated() + metrics.recordTradeValue(qty*price) —
+        // TICKET-ADV083
+        Trade t = new Trade();
+Trade saved = tradeRepo.save(t);
+        metrics.incrementTradeCreated();
+        metrics.recordTradeValue(saved.getQuantity().multiply(saved.getPrice()).doubleValue());
+        // - events.publish(new TradeEvent(... TRADE_CREATED ... actor ...)) —
+        // TICKET-ADV129
         throw new UnsupportedOperationException("TICKET-ADV064");
     }
 
     public Trade update(Long id, TradeRequest req, String actor) {
         // TODO(TICKET-ADV065): load by id (throw TradeNotFoundException if missing),
-        //   copy mutable fields from req, save, publish a TRADE_UPDATED event.
+        // copy mutable fields from req, save, publish a TRADE_UPDATED event.
         throw new UnsupportedOperationException("TICKET-ADV065");
     }
 

@@ -4,6 +4,9 @@ import org.springframework.boot.actuate.health.AbstractHealthIndicator;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.stereotype.Component;
 
+import java.sql.Connection;
+import java.sql.Statement;
+
 import javax.sql.DataSource;
 
 /**

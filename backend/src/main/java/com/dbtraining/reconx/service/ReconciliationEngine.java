@@ -1,10 +1,8 @@
 package com.dbtraining.reconx.service;
 
 import com.dbtraining.reconx.dto.ReconResult;
-import com.dbtraining.reconx.model.ReconciliationRule;
-import com.dbtraining.reconx.model.TradeType;
+import com.dbtraining.reconx.model.*;
 import io.micrometer.core.annotation.Timed;
-import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -13,25 +11,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-/**
- * ============================================================================
- * TICKET-ADV033 — ReconciliationEngine using Streams (parallel matching)
- * TICKET-ADV037 — CompletableFuture: parallel recon by counterparty
- * TICKET-ADV047 — Edge cases: empty/single/all-mismatched inputs handled
- * TICKET-ADV084 — @Timed exports reconciliation_duration_seconds histogram
- *
- * WHAT:    Compares internal trades against external (counterparty) trades and
- *          returns a ReconResult per internal trade (MATCHED or BREAK).
- * HOW:     Index externals by tradeRef, then stream internals and look each
- *          up. CompletableFuture variant batches by counterparty for
- *          throughput on large books.
- * WHY:     This is the spine of the product. Everything else (REST API,
- *          Kafka consumers, dashboard) ultimately calls into here.
- * OBSERVE: Histogram appears at /actuator/prometheus under
- *          reconciliation_duration_seconds.
- * ============================================================================
- */
-@Service
 public class ReconciliationEngine {
 
     @Timed(value = "reconciliation.duration", description = "Wall time of reconcile()",
@@ -51,21 +30,36 @@ public class ReconciliationEngine {
                 .toList();
     }
 
-
     /**
      * TICKET-ADV037 — split by counterparty, reconcile each batch concurrently,
      * combine into a single result list. Caller passes one external feed per
      * counterparty (typical real-world shape).
      */
     public CompletableFuture<List<ReconResult>> reconcileByCounterparty(
-            Map<Long, List<TradeType>> internalByCp,
-            Map<Long, List<TradeType>> externalByCp,
-            ReconciliationRule rule) {
-        // TODO(TICKET-ADV037): for each counterparty key in internalByCp launch a
-        //   CompletableFuture.supplyAsync(() -> reconcile(...)). Combine via
-        //   CompletableFuture.allOf(...).thenApply(v -> futures.stream()
-        //       .flatMap(f -> f.join().stream()).toList()).
-        throw new UnsupportedOperationException("TICKET-ADV037");
+        Map<Long, List<TradeType>> internalByCp,
+        Map<Long, List<TradeType>> externalByCp,
+        ReconciliationRule rule) {
+
+        List<CompletableFuture<List<ReconResult>>> futures = internalByCp.entrySet()
+                .stream()
+                .map(entry ->
+                        CompletableFuture.supplyAsync(() ->
+                                reconcile(
+                                        entry.getValue(),
+                                        externalByCp.getOrDefault(entry.getKey(), List.of()),
+                                        rule
+                                )
+                        )
+                )
+                .toList();
+
+        return CompletableFuture
+                .allOf(futures.toArray(new CompletableFuture[0]))
+                .thenApply(v ->
+                        futures.stream()
+                                .flatMap(future -> future.join().stream())
+                                .toList()
+                );
     }
 
     private ReconResult matchOne(TradeType internal, TradeType external, ReconciliationRule rule) {
