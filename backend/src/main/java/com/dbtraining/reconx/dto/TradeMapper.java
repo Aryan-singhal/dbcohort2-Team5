@@ -6,7 +6,7 @@ import org.mapstruct.Mapping;
 
 /**
  * ============================================================================
- * TICKET-ADV054 — MapStruct mapper: Trade entity <-> DTO
+ * TICKET-ADV054 (done) — MapStruct mapper: Trade entity <-> DTO
  *
  * WHAT:    Generates the entity↔DTO conversion at compile time.
  * HOW:     componentModel="spring" → MapStruct emits a @Component bean named
@@ -15,12 +15,27 @@ import org.mapstruct.Mapping;
  *          field is added to one side and forgotten on the other.
  * ============================================================================
  */
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface TradeMapper {
 
     @Mapping(source = "instrument.id", target = "instrumentId")
     @Mapping(source = "instrument.symbol", target = "instrumentSymbol")
     @Mapping(source = "counterparty.id", target = "counterpartyId")
     @Mapping(source = "counterparty.name", target = "counterpartyName")
+    @Mapping(source = "status",                target = "status",
+             qualifiedByName = "statusToString")
     TradeResponse toResponse(Trade trade);
+
+    @Mapping(target = "id",            ignore = true)
+    @Mapping(target = "counterparty",  ignore = true)   // wired by service from id
+    @Mapping(target = "instrument",    ignore = true)
+    @Mapping(target = "status",        ignore = true)   // defaulted to PENDING
+    @Mapping(target = "createdAt",     ignore = true)
+    @Mapping(target = "modifiedAt",    ignore = true)
+    Trade toEntity(TradeRequest req);
+
+    @Named("statusToString")
+    static String statusToString(Enum<?> status) {
+        return status == null ? null : status.name();
+    }
 }
