@@ -6,6 +6,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
+import static com.dbtraining.reconx.kafka.KafkaTopicsConfig.TRADE_EVENTS;
+
 /**
  * ============================================================================
  * TICKET-ADV129 — TradeEventProducer
@@ -36,7 +38,7 @@ import org.springframework.stereotype.Component;
 public class TradeEventProducer {
 
     private static final Logger log = LoggerFactory.getLogger(TradeEventProducer.class);
-    private static final String TOPIC = "trade-events";
+    
 
     private final KafkaTemplate<String, TradeEvent> template;
 
@@ -45,6 +47,28 @@ public class TradeEventProducer {
     }
 
     public void publish(TradeEvent event) {
-        throw new UnsupportedOperationException("TICKET-ADV129");
-    }
+
+    log.debug(
+            "Publishing TradeEvent eventId={} ref={} type={}",
+            event.eventId(),
+            event.tradeRef(),
+            event.eventType());
+
+    template.send(TRADE_EVENTS, event.tradeRef(), event)
+            .whenComplete((result, ex) -> {
+                if (ex != null) {
+                    log.error(
+                            "Failed to publish TradeEvent eventId={} tradeRef={}",
+                            event.eventId(),
+                            event.tradeRef(),
+                            ex);
+                } else {
+                    log.info(
+                            "Published TradeEvent tradeRef={} partition={} offset={}",
+                            event.tradeRef(),
+                            result.getRecordMetadata().partition(),
+                            result.getRecordMetadata().offset());
+                }
+            });
+}
 }
