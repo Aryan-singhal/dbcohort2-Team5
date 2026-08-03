@@ -36,6 +36,11 @@
             <dropTable tableName="audit_log"/>
         </rollback>
     </changeSet>
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <tableExists tableName="audit_log"/>
+        </not>
+    </preConditions>
 
     <changeSet id="006-create-recon-breaks" author="trainer">
         <createTable tableName="recon_breaks">
@@ -56,6 +61,11 @@
             <dropTable tableName="recon_breaks"/>
         </rollback>
     </changeSet>
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <tableExists tableName="recon_breaks"/>
+        </not>
+    </preConditions>
 
     <changeSet id="006-create-recon-jobs" author="trainer">
         <createTable tableName="recon_jobs">
@@ -75,5 +85,9 @@
             <dropTable tableName="recon_jobs"/>
         </rollback>
     </changeSet>
-
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <tableExists tableName="recon_jobs"/>
+        </not>
+    </preConditions>
 </databaseChangeLog>

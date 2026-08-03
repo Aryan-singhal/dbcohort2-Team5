@@ -1,12 +1,40 @@
-// TICKET-ADV118 — useInfiniteScroll: invokes loadMore() when sentinel is visible.
-import { useRef } from 'react';
+import { useEffect, useRef } from "react";
 
-export function useInfiniteScroll(loadMore) {
-  const sentinelRef = useRef(null);
+export function useInfiniteScroll(
+    loadMore,
+    { rootMargin = "200px" } = {}
+) {
 
-  // TODO(TICKET-ADV118): in a useEffect, create an IntersectionObserver that
-  //                     calls loadMore() when entries[0].isIntersecting.
-  //                     Observe sentinelRef.current. Disconnect in cleanup.
+    const sentinelRef = useRef(null);
+    const loadMoreRef = useRef(loadMore);
 
-  return sentinelRef;
+    // Keep the latest loadMore callback
+    useEffect(() => {
+        loadMoreRef.current = loadMore;
+    }, [loadMore]);
+
+    // Create the observer only once
+    useEffect(() => {
+
+        const sentinel = sentinelRef.current;
+        if (!sentinel) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting) {
+                    loadMoreRef.current();
+                }
+            },
+            {
+                rootMargin
+            }
+        );
+
+        observer.observe(sentinel);
+
+        return () => observer.disconnect();
+
+    }, [rootMargin]);
+
+    return sentinelRef;
 }

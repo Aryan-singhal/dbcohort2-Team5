@@ -64,14 +64,28 @@ public class JwtTokenProvider {
     }
 
     public String generate(String email, String role) {
-        throw new UnsupportedOperationException("TICKET-ADV072");
+        Instant now = Instant.now();
+        Instant exp = now.plusSeconds(expirationMinutes * 60);
+        return Jwts.builder()
+                .subject(email)
+                .issuer(issuer)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(exp))
+                .claims(Map.of("role", role))
+                .signWith(key)
+                .compact();
     }
 
     public Claims parse(String token) {
-        throw new UnsupportedOperationException("TICKET-ADV072");
+        return Jwts.parser()
+                .verifyWith(key)
+                .requireIssuer(issuer)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     public long expirationSeconds() {
-        throw new UnsupportedOperationException("TICKET-ADV072");
+        return expirationMinutes * 60;
     }
 }

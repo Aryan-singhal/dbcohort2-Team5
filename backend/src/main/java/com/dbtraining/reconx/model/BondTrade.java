@@ -61,8 +61,7 @@ public final class BondTrade implements TradeType {
     /** Notional = faceValue in the bond's currency. */
     @Override
     public Money notional() {
-        // TODO(TICKET-ADV021): return new Money(faceValue, currency).
-        throw new UnsupportedOperationException("TICKET-ADV021");
+        return new Money(faceValue, currency);
     }
 
     public String isin() {
@@ -105,9 +104,9 @@ public final class BondTrade implements TradeType {
 
     @Override
     public String toString() {
-        // TODO(TICKET-ADV030): "BondTrade[ref=..., isin=..., face=... CCY, coupon=...,
-        // maturity=..., side=...]"
-        throw new UnsupportedOperationException("TICKET-ADV030");
+        return "BondTrade[ref=%s, isin=%s, face=%s %s, coupon=%s, maturity=%s, side=%s]"
+                .formatted(tradeRef, isin, faceValue, currency.getCurrencyCode(),
+                        couponRate, maturityDate, side);
     }
 
     public static final class Builder {
@@ -165,12 +164,17 @@ public final class BondTrade implements TradeType {
         }
 
         public BondTrade build() {
-            // TODO(TICKET-ADV021):
-            // - Objects.requireNonNull each required field.
-            // - maturityDate must not be before tradeDate (IllegalStateException
-            // otherwise).
-            // - return new BondTrade(this).
-            throw new UnsupportedOperationException("TICKET-ADV021");
+            Objects.requireNonNull(tradeRef, "tradeRef");
+            Objects.requireNonNull(isin, "isin");
+            Objects.requireNonNull(faceValue, "faceValue");
+            Objects.requireNonNull(couponRate, "couponRate");
+            Objects.requireNonNull(maturityDate, "maturityDate");
+            Objects.requireNonNull(currency, "currency");
+            Objects.requireNonNull(side, "side");
+            Objects.requireNonNull(tradeDate, "tradeDate");
+            if (maturityDate.isBefore(tradeDate))
+                throw new IllegalStateException("maturityDate cannot be before tradeDate");
+            return new BondTrade(this);
         }
     }
 }
