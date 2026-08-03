@@ -20,6 +20,7 @@
       "targets": [
         { "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le, uri))", "legendFormat": "{{uri}}" }
       ],
+      
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 }
     },
     {
@@ -27,6 +28,19 @@
       "title": "Open recon breaks (ADV091)",
       "datasource": { "type": "prometheus", "uid": "reconx-prometheus" },
       "targets": [{ "expr": "recon_break_count" }],
+      "fieldConfig": {
+        "defaults": {
+          "color": {"mode": "value"},
+          "thresholds": {"mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 10},
+              {"color": "red", "value": 50}
+            ]
+          },
+          "unit": "short"
+        }
+      },
       "gridPos": { "h": 4, "w": 6, "x": 0, "y": 8 }
     },
     {
@@ -37,11 +51,31 @@
       "gridPos": { "h": 8, "w": 12, "x": 6, "y": 8 }
     },
     {
-      "type": "timeseries",
+      "type": "heatmap",
       "title": "Reconciliation duration histogram (ADV090)",
       "datasource": { "type": "prometheus", "uid": "reconx-prometheus" },
       "targets": [{ "expr": "sum(rate(reconciliation_duration_seconds_bucket[5m])) by (le)" }],
       "gridPos": { "h": 8, "w": 24, "x": 0, "y": 16 }
+    },
+    {
+      "type": "piechart",
+      "title": "Trades by status (TICKET-ADV092)",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "reconx-prometheus"
+      },
+      "targets": [
+        {
+          "expr": "sum by (status) (trades_by_status)",
+          "legendFormat": "{{status}}"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      }
     }
   ],
   "refresh": "10s",
