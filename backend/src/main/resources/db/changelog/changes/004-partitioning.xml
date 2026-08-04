@@ -33,6 +33,10 @@
         <comment>Placeholder: students rebuild this in ADV007. Trainer copy
                  ships a no-op so dev/uat boot cleanly.</comment>
         <sql>
+    DROP INDEX IF EXISTS idx_trades_status;
+    DROP INDEX IF EXISTS idx_trades_instrument;
+    DROP INDEX IF EXISTS idx_trades_counterparty;
+
     ALTER TABLE trades RENAME TO trades_legacy;
 
     CREATE TABLE trades (

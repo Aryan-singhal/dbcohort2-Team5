@@ -64,7 +64,7 @@ class ReconciliationEngineTest {
     // MISSING_EXTERNAL
     @Test
     void testReconcile_singleInternalNoExternal_returnsBreak() {
-        EquityTrade internal = equity("EQU-20260603-EDGE-1", "100.00", "1000");
+        EquityTrade internal = equity("EQU-20260603-0005", "100.00", "1000");
 
         List<ReconResult> out = engine.reconcile(List.of(internal), List.of(), ReconciliationRule.EXACT);
 
@@ -77,13 +77,13 @@ class ReconciliationEngineTest {
     @Test
     void testReconcile_allMismatched_summaryShowsZeroMatched() {
         List<TradeType> internals = List.of(
-                equity("EQU-MM-1", "100.00", "1000"),
-                equity("EQU-MM-2", "100.00", "1000"),
-                equity("EQU-MM-3", "100.00", "1000"));
+                equity("EQU-20260603-0006", "100.00", "1000"),
+                equity("EQU-20260603-0007", "100.00", "1000"),
+                equity("EQU-20260603-0008", "100.00", "1000"));
         List<TradeType> externals = List.of(
-                equity("EQU-MM-1", "200.00", "1000"),
-                equity("EQU-MM-2", "200.00", "1000"),
-                equity("EQU-MM-3", "200.00", "1000"));
+                equity("EQU-20260603-0006", "200.00", "1000"),
+                equity("EQU-20260603-0007", "200.00", "1000"),
+                equity("EQU-20260603-0008", "200.00", "1000"));
 
         List<ReconResult> out = engine.reconcile(internals, externals, ReconciliationRule.EXACT);
         ReconSummary summary = out.stream().collect(new ReconSummaryCollector());

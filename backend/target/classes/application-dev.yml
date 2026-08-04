@@ -26,6 +26,7 @@ spring:
     bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
     listener:
       missing-topics-fatal: false   # don't blow up if Kafka isn't running locally
+      auto-startup: false
 
 logging:
   level:

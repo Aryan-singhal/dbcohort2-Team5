@@ -18,10 +18,8 @@ public class TradeLookupService {
     }
 
     public Counterparty counterpartyForTradeRef(String tradeRef) {
-        return tradeRepo.findByRef(tradeRef)
-                .map(trade -> trade.getCounterparty().getId()) 
-// (Note: If your entity uses object relations, it might be .map(trade -> trade.getCounterparty().getId()) instead)
-                .flatMap(cpRepo::findById)
+        return tradeRepo.findByTradeRefIgnoreCase(tradeRef)
+                .map(Trade::getCounterparty)
                 .orElseThrow(() -> new NoSuchElementException(
                         "No counterparty resolvable for trade " + tradeRef));
     }

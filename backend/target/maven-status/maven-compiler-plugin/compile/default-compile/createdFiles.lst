@@ -17,6 +17,7 @@ com\dbtraining\reconx\service\ReconSummary.class
 com\dbtraining\reconx\controller\TradeController.class
 com\dbtraining\reconx\model\EquityTrade.class
 com\dbtraining\reconx\service\ReconSummaryCollector.class
+com\dbtraining\reconx\service\TradeAggregator.class
 com\dbtraining\reconx\observability\KafkaHealthIndicator.class
 com\dbtraining\reconx\service\InstrumentService.class
 com\dbtraining\reconx\repository\entity\TradeStatus.class
@@ -57,6 +58,7 @@ com\dbtraining\reconx\repository\AuditLogRepository.class
 com\dbtraining\reconx\exception\DuplicateTradeRefException.class
 com\dbtraining\reconx\security\JwtTokenProvider.class
 com\dbtraining\reconx\model\BondTrade$Builder.class
+com\dbtraining\reconx\service\TradeAggregator$1.class
 com\dbtraining\reconx\observability\ReconConfigMBean.class
 com\dbtraining\reconx\service\TradeHistoryService.class
 com\dbtraining\reconx\model\TradeType.class
